@@ -40,3 +40,27 @@ $app->post('/post', function (Request $request, Response $response, $args) {
             ->withStatus(201);
     }
 });
+
+//delete 
+$app->delete('/post/{id}', function (Request $request, Response $response, $args) {
+    $id = $args['id'];
+    $conn = $GLOBALS['conn'];
+    $sql = 'delete from post_tags where pid = ?';
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param('i', $id);
+    $stmt->execute();
+
+    $sql = 'delete from post where id = ?';
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param('i', $id);
+    $stmt->execute();
+
+    $affected = $stmt->affected_rows;
+    if ($affected > 0) {
+        $data = ["affected_rows" => $affected];
+        $response->getBody()->write(json_encode($data));
+        return $response
+            ->withHeader('Content-Type', 'application/json')
+            ->withStatus(200);
+    }
+});
