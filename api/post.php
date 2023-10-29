@@ -20,3 +20,23 @@ $app->get('/post', function (Request $request, Response $response) {
         ->withHeader('Content-Type', 'application/json; charset=utf-8')
         ->withStatus(200);
 });
+
+$app->post('/post', function (Request $request, Response $response, $args) {
+    $json = $request->getBody();
+    $jsonData = json_decode($json, true);
+
+    $conn = $GLOBALS['conn'];
+    $sql = 'insert into testimg (img) values (?)';
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param('s', $jsonData['img']);
+    $stmt->execute();
+    $affected = $stmt->affected_rows;
+    if ($affected > 0) {
+
+        $data = ["affected_rows" => $affected, "last_fid" => $conn->insert_id];
+        $response->getBody()->write(json_encode($data));
+        return $response
+            ->withHeader('Content-Type', 'application/json')
+            ->withStatus(201);
+    }
+});

@@ -20,9 +20,9 @@ $app->post('/user/register', function (Request $request, Response $response, $ar
     $result = $stmt->get_result();
 
     if ($result->num_rows == 0) {
-        $sql = "INSERT INTO user (username,password,name,img) VALUES (?, ?, ?,?)";
+        $sql = "INSERT INTO user (name,username,password,img) VALUES (?, ?, ?,?)";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ssss", $jsonData['username'], $hashpwd, $jsonData['name'], $jsonData['img']);
+        $stmt->bind_param("ssss", $jsonData['name'], $jsonData['username'], $hashpwd, $jsonData['img']);
         $stmt->execute();
 
         $response->getBody()->write(json_encode("สมัครสมาชิกสำเร็จ", JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK));
