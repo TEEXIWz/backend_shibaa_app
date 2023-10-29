@@ -6,7 +6,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 //searchAll
 $app->get('/post', function (Request $request, Response $response) {
     $conn = $GLOBALS['conn'];
-    $sql = 'select * from testimg';
+    $sql = 'select * from post';
     $stmt = $conn->prepare($sql);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -26,9 +26,9 @@ $app->post('/post', function (Request $request, Response $response, $args) {
     $jsonData = json_decode($json, true);
 
     $conn = $GLOBALS['conn'];
-    $sql = 'insert into testimg (img) values (?)';
+    $sql = 'INSERT INTO post (uid, description, liked, created_at, img) VALUES (?, ?, 0, NOW(), ?)';
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param('s', $jsonData['img']);
+    $stmt->bind_param('iss', $jsonData['uid'], $jsonData['description'], $jsonData['img']);
     $stmt->execute();
     $affected = $stmt->affected_rows;
     if ($affected > 0) {
