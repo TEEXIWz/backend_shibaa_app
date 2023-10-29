@@ -4,7 +4,7 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
 //register
-$app->post('/user/register', function (Request $request, Response $response, $args) {
+$app->post('/user/register', function (Request $request, Response $response) {
     $conn = $GLOBALS['conn'];
 
     $body = $request->getBody();

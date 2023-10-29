@@ -1,4 +1,5 @@
 <?php
+
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Factory\AppFactory;
@@ -13,6 +14,7 @@ $app->addErrorMiddleware(true, true, true);
 require __DIR__ . '/dbconnect.php';
 require __DIR__ . '/api/user.php';
 require __DIR__ . '/api/post.php';
+require __DIR__ . '/api/tags.php';
 
 $app->options('/{routes:.+}', function ($request, $response, $args) {
     return $response;
@@ -21,9 +23,9 @@ $app->options('/{routes:.+}', function ($request, $response, $args) {
 $app->add(function ($request, $handler) {
     $response = $handler->handle($request);
     return $response
-            ->withHeader('Access-Control-Allow-Origin', '*')
-            ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
-            ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+        ->withHeader('Access-Control-Allow-Origin', '*')
+        ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
+        ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
 });
 
 $app->get('/ping', function (Request $request, Response $response, $args) {
