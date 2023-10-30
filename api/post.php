@@ -69,3 +69,27 @@ $app->delete('/post/{id}', function (Request $request, Response $response, $args
             ->withStatus(200);
     }
 });
+
+//search PostTags
+$app->get('/post/{tid}', function (Request $request, Response $response, $args) {
+    $conn = $GLOBALS['conn'];
+    $sql = 'SELECT post.*,tid
+            FROM post_tags
+            INNER JOIN  post
+            ON          post.id = post_tags.pid
+            WHERE tid=?';
+    $stmt = $conn->prepare($sql);
+
+    $stmt->bind_param('s', $args['tid']);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $data = array();
+    foreach ($result as $row) {
+        array_push($data, $row);
+    }
+
+    $response->getBody()->write(json_encode($data, JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK));
+    return $response
+        ->withHeader('Content-Type', 'application/json; charset=utf-8')
+        ->withStatus(200);
+});
