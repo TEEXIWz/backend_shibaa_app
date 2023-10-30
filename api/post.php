@@ -6,7 +6,11 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 //searchAll
 $app->get('/post', function (Request $request, Response $response) {
     $conn = $GLOBALS['conn'];
-    $sql = 'select * from post';
+    $sql = 'SELECT      id,username,description,liked,DATE(created_at) as date,TIME(created_at) as time,post.img,user.img as uimg
+            FROM        post
+            INNER JOIN  user
+            ON          post.uid = user.uid
+            ORDER BY    id desc';
     $stmt = $conn->prepare($sql);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -26,7 +30,8 @@ $app->post('/post', function (Request $request, Response $response, $args) {
     $jsonData = json_decode($json, true);
 
     $conn = $GLOBALS['conn'];
-    $sql = 'INSERT INTO post (uid, description, liked, created_at, img) VALUES (?, ?, 0, NOW(), ?)';
+    $sql = 'INSERT INTO post (uid, description, liked, created_at, img)
+            VALUES (?, ?, 0, NOW(), ?)';
     $stmt = $conn->prepare($sql);
     $stmt->bind_param('sss', $jsonData['uid'], $jsonData['description'], $jsonData['img']);
     $stmt->execute();
