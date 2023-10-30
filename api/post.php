@@ -6,12 +6,39 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 //searchAll
 $app->get('/post', function (Request $request, Response $response) {
     $conn = $GLOBALS['conn'];
-    $sql = 'SELECT      id,username,description,liked,DATE(created_at) as date,TIME(created_at) as time,post.img,user.img as uimg
+    $sql = 'SELECT      id,username,post.description,liked,DATE(created_at) as date,TIME(created_at) as time,post.img,user.img as uimg
             FROM        post
             INNER JOIN  user
             ON          post.uid = user.uid
             ORDER BY    id desc';
     $stmt = $conn->prepare($sql);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $data = array();
+    foreach ($result as $row) {
+        array_push($data, $row);
+    }
+
+    $response->getBody()->write(json_encode($data, JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK));
+    return $response
+        ->withHeader('Content-Type', 'application/json; charset=utf-8')
+        ->withStatus(200);
+});
+
+
+
+//searchByPostID
+$app->get('/post/{id}', function (Request $request, Response $response, $args) {
+    $conn = $GLOBALS['conn'];
+    $id = $args['id'];
+    $sql = 'SELECT      id,username,post.description,liked,DATE(created_at) as date,TIME(created_at) as time,post.img,user.img as uimg
+            FROM        post
+            INNER JOIN  user
+            ON          post.uid = user.uid
+            WHERE       user.uid = ?
+            ORDER BY    id desc';
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param('i', $id);
     $stmt->execute();
     $result = $stmt->get_result();
     $data = array();
@@ -71,7 +98,7 @@ $app->delete('/post/{id}', function (Request $request, Response $response, $args
 });
 
 //search PostTags
-$app->get('/post/{tid}', function (Request $request, Response $response, $args) {
+$app->get('/posttag/{tid}', function (Request $request, Response $response, $args) {
     $conn = $GLOBALS['conn'];
     $sql = 'SELECT post.*,tid
             FROM post_tags
