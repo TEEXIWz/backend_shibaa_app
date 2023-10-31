@@ -57,10 +57,10 @@ $app->post('/post', function (Request $request, Response $response, $args) {
     $jsonData = json_decode($json, true);
 
     $conn = $GLOBALS['conn'];
-    $sql = 'INSERT INTO post (uid, description, liked, created_at, img)
-            VALUES (?, ?, 0, NOW(), ?)';
+    $sql = 'INSERT INTO post (uid,title, description, liked, created_at, img)
+            VALUES (?, ?, ?, 0, NOW(), ?)';
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param('sss', $jsonData['uid'], $jsonData['description'], $jsonData['img']);
+    $stmt->bind_param('ssss', $jsonData['uid'], $jsonData['title'], $jsonData['description'], $jsonData['img']);
     $stmt->execute();
     $affected = $stmt->affected_rows;
     if ($affected > 0) {
