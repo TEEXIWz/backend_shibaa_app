@@ -6,7 +6,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 //searchAll
 $app->get('/post', function (Request $request, Response $response) {
     $conn = $GLOBALS['conn'];
-    $sql = 'SELECT      id,username,post.description,liked,DATE(created_at) as date,TIME(created_at) as time,post.img,user.img as uimg
+    $sql = 'SELECT      id,name,title,post.description,liked,created_at,post.img,user.img as uimg
             FROM        post
             INNER JOIN  user
             ON          post.uid = user.uid
@@ -25,13 +25,11 @@ $app->get('/post', function (Request $request, Response $response) {
         ->withStatus(200);
 });
 
-
-
 //searchByPostID
 $app->get('/post/{id}', function (Request $request, Response $response, $args) {
     $conn = $GLOBALS['conn'];
     $id = $args['id'];
-    $sql = 'SELECT      id,username,post.description,liked,DATE(created_at) as date,TIME(created_at) as time,post.img,user.img as uimg
+    $sql = 'SELECT      id,name,title,post.description,liked,created_at,post.img,user.img as uimg
             FROM        post
             INNER JOIN  user
             ON          post.uid = user.uid
@@ -64,7 +62,6 @@ $app->post('/post', function (Request $request, Response $response, $args) {
     $stmt->execute();
     $affected = $stmt->affected_rows;
     if ($affected > 0) {
-
         $data = ["affected_rows" => $affected, "last_fid" => $conn->insert_id];
         $response->getBody()->write(json_encode($data));
         return $response
