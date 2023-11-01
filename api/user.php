@@ -73,10 +73,30 @@ $app->put('/user/edit/{id}', function (Request $request, Response $response, $ar
     $json = $request->getBody();
     $jsonData = json_decode($json, true);
     $id = $args['id'];
-    $hashpwd = password_hash($jsonData['password'], PASSWORD_DEFAULT);
-    $sql = 'update user set name=?, username=? , password=? , img=? where uid = ?';
+    $sql = 'update user set name=?, username=? , description=? , img=? where uid = ?';
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param('ssssi', $jsonData['name'], $jsonData['username'], $hashpwd, $jsonData['img'], $id);
+    $stmt->bind_param('ssssi', $jsonData['name'], $jsonData['username'], $jsonData['description'], $jsonData['img'], $id);
+    $stmt->execute();
+    
+    $affected = $stmt->affected_rows;
+    if ($affected > 0) {
+        $data = ["affected_rows" => $affected];
+        $response->getBody()->write(json_encode($data));
+        return $response
+            ->withHeader('Content-Type', 'application/json')
+            ->withStatus(201);
+    }
+});
+
+$app->put('/user/editpwd/{id}', function (Request $request, Response $response, $args) {
+    $conn = $GLOBALS['conn'];
+    $json = $request->getBody();
+    $jsonData = json_decode($json, true);
+    $id = $args['id'];
+    $hashpwd = password_hash($jsonData['password'], PASSWORD_DEFAULT);
+    $sql = 'update user set password=? where uid = ?';
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param('si', $hashpwd, $id);
     $stmt->execute();
     $affected = $stmt->affected_rows;
     if ($affected > 0) {
@@ -102,6 +122,24 @@ $app->get('/user', function (Request $request, Response $response) {
     }
 
     $response->getBody()->write(json_encode($data, JSON_UNESCAPED_UNICODE));
+    return $response
+        ->withHeader('Content-Type', 'application/json; charset=utf-8')
+        ->withStatus(200);
+});
+
+$app->get('/user/{id}', function (Request $request, Response $response, $args) {
+    $conn = $GLOBALS['conn'];
+    $id = $args['id'];
+    $sql = 'SELECT  *
+            FROM    user
+            WHERE   uid = ?';
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+
+    $response->getBody()->write(json_encode($row, JSON_UNESCAPED_UNICODE));
     return $response
         ->withHeader('Content-Type', 'application/json; charset=utf-8')
         ->withStatus(200);

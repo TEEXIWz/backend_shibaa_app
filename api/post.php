@@ -25,6 +25,32 @@ $app->get('/post', function (Request $request, Response $response) {
         ->withStatus(200);
 });
 
+//search PostTags
+$app->get('/posttag/{tid}', function (Request $request, Response $response, $args) {
+    $conn = $GLOBALS['conn'];
+    $sql = 'SELECT id,name,title,post.description,liked,created_at,post.img,user.img as uimg
+            FROM ((post
+            INNER JOIN  post_tags
+            ON          post.id = post_tags.pid)
+            INNER JOIN  user
+            ON          post.uid = user.uid)
+            WHERE tid=?';
+    $stmt = $conn->prepare($sql);
+
+    $stmt->bind_param('s', $args['tid']);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $data = array();
+    foreach ($result as $row) {
+        array_push($data, $row);
+    }
+
+    $response->getBody()->write(json_encode($data, JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK));
+    return $response
+        ->withHeader('Content-Type', 'application/json; charset=utf-8')
+        ->withStatus(200);
+});
+
 //searchByPostID
 $app->get('/post/{id}', function (Request $request, Response $response, $args) {
     $conn = $GLOBALS['conn'];
@@ -63,7 +89,7 @@ $app->post('/post', function (Request $request, Response $response, $args) {
     $affected = $stmt->affected_rows;
     if ($affected > 0) {
         $data = ["affected_rows" => $affected, "last_fid" => $conn->insert_id];
-        $response->getBody()->write(json_encode($data));
+        $response->getBody()->write(json_encode($conn->insert_id));
         return $response
             ->withHeader('Content-Type', 'application/json')
             ->withStatus(201);
@@ -92,28 +118,4 @@ $app->delete('/post/{id}', function (Request $request, Response $response, $args
             ->withHeader('Content-Type', 'application/json')
             ->withStatus(200);
     }
-});
-
-//search PostTags
-$app->get('/posttag/{tid}', function (Request $request, Response $response, $args) {
-    $conn = $GLOBALS['conn'];
-    $sql = 'SELECT post.*,tid
-            FROM post_tags
-            INNER JOIN  post
-            ON          post.id = post_tags.pid
-            WHERE tid=?';
-    $stmt = $conn->prepare($sql);
-
-    $stmt->bind_param('s', $args['tid']);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $data = array();
-    foreach ($result as $row) {
-        array_push($data, $row);
-    }
-
-    $response->getBody()->write(json_encode($data, JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK));
-    return $response
-        ->withHeader('Content-Type', 'application/json; charset=utf-8')
-        ->withStatus(200);
 });
