@@ -6,7 +6,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 //searchAll
 $app->get('/post', function (Request $request, Response $response) {
     $conn = $GLOBALS['conn'];
-    $sql = 'SELECT      id,name,title,post.description,liked,created_at,post.img,user.img as uimg
+    $sql = 'SELECT      id,user.uid,name,title,post.description,liked,created_at,post.img,user.img as uimg
             FROM        post
             INNER JOIN  user
             ON          post.uid = user.uid
@@ -28,7 +28,7 @@ $app->get('/post', function (Request $request, Response $response) {
 //search PostTags
 $app->get('/posttag/{tid}', function (Request $request, Response $response, $args) {
     $conn = $GLOBALS['conn'];
-    $sql = 'SELECT id,name,title,post.description,liked,created_at,post.img,user.img as uimg
+    $sql = 'SELECT id,user.uid,name,title,post.description,liked,created_at,post.img,user.img as uimg
             FROM ((post
             INNER JOIN  post_tags
             ON          post.id = post_tags.pid)
@@ -51,11 +51,11 @@ $app->get('/posttag/{tid}', function (Request $request, Response $response, $arg
         ->withStatus(200);
 });
 
-//searchByPostID
+//searchByUserID
 $app->get('/post/{id}', function (Request $request, Response $response, $args) {
     $conn = $GLOBALS['conn'];
     $id = $args['id'];
-    $sql = 'SELECT      id,name,title,post.description,liked,created_at,post.img,user.img as uimg
+    $sql = 'SELECT      id,user.uid,name,title,post.description,liked,created_at,post.img,user.img as uimg
             FROM        post
             INNER JOIN  user
             ON          post.uid = user.uid

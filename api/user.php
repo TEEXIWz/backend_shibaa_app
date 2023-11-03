@@ -111,8 +111,12 @@ $app->put('/user/editpwd/{id}', function (Request $request, Response $response, 
 //allUser
 $app->get('/user', function (Request $request, Response $response) {
     $conn = $GLOBALS['conn'];
-    $sql = 'SELECT *
-            FROM user';
+    $sql = 'SELECT  user.*,f.COUNT(user),f.COUNT(follower)
+            FROM    ((user
+            INNER JOIN  follow as f
+            ON          user.uid = follow.user)
+            INNER JOIN  follow as fs
+            ON          user.uid = follow.follower)';
     $stmt = $conn->prepare($sql);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -140,6 +144,47 @@ $app->get('/user/{id}', function (Request $request, Response $response, $args) {
     $row = $result->fetch_assoc();
 
     $response->getBody()->write(json_encode($row, JSON_UNESCAPED_UNICODE));
+    return $response
+        ->withHeader('Content-Type', 'application/json; charset=utf-8')
+        ->withStatus(200);
+});
+
+$app->get('/userbyusername/{username}', function (Request $request, Response $response, $args) {
+    $conn = $GLOBALS['conn'];
+    $username = $args['username'];
+    $sql = 'SELECT  *
+            FROM    user
+            WHERE   username = ?';
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+
+    $response->getBody()->write(json_encode($row, JSON_UNESCAPED_UNICODE));
+    return $response
+        ->withHeader('Content-Type', 'application/json; charset=utf-8')
+        ->withStatus(200);
+});
+
+$app->get('/follow', function (Request $request, Response $response, $args) {
+    $conn = $GLOBALS['conn'];
+    // $id = $args['id'];
+    $sql = 'SELECT      user.name,COUNT(*) as follower
+            FROM        follow
+            INNER JOIN  user
+            ON          user.uid = follow.uid
+            GROUP BY    follow.uid';
+    $stmt = $conn->prepare($sql);
+    // $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $data = array();
+    foreach ($result as $row) {
+        array_push($data, $row);
+    }
+
+    $response->getBody()->write(json_encode($data, JSON_UNESCAPED_UNICODE));
     return $response
         ->withHeader('Content-Type', 'application/json; charset=utf-8')
         ->withStatus(200);
