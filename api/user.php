@@ -42,9 +42,14 @@ $app->post('/user/login', function (Request $request, Response $response) {
     $username = $jsonData['username'];
     $password = $jsonData['password'];
 
-    $sql = "  SELECT  * 
-            FROM    user 
-            WHERE   username = ? ";
+    $sql = "SELECT      COUNT(DISTINCT f1.follower) as follower,COUNT(DISTINCT f2.uid) as following,user.* 
+            FROM        user
+            LEFT JOIN   follow f1
+            ON          user.uid = f1.uid
+            LEFT JOIN   follow f2
+            ON          user.uid = f2.follower
+            WHERE       username = ?
+            GROUP BY    user.uid";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("s", $username);
     $stmt->execute();
@@ -111,8 +116,13 @@ $app->put('/user/editpwd/{id}', function (Request $request, Response $response, 
 //allUser
 $app->get('/user', function (Request $request, Response $response) {
     $conn = $GLOBALS['conn'];
-    $sql = 'SELECT  *
-            FROM    user';
+    $sql = 'SELECT      COUNT(DISTINCT f1.follower) as follower,COUNT(DISTINCT f2.uid) as following,user.*
+            FROM        user
+            LEFT JOIN  follow f1
+            ON          user.uid = f1.uid
+            LEFT JOIN  follow f2
+            ON          user.uid = f2.follower
+            GROUP BY    user.uid';
     $stmt = $conn->prepare($sql);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -130,9 +140,14 @@ $app->get('/user', function (Request $request, Response $response) {
 $app->get('/user/{id}', function (Request $request, Response $response, $args) {
     $conn = $GLOBALS['conn'];
     $id = $args['id'];
-    $sql = 'SELECT  *
-            FROM    user
-            WHERE   uid = ?';
+    $sql = 'SELECT      COUNT(DISTINCT f1.follower) as follower,COUNT(DISTINCT f2.uid) as following,user.*
+            FROM        user
+            LEFT JOIN   follow f1
+            ON          user.uid = f1.uid
+            LEFT JOIN   follow f2
+            ON          user.uid = f2.follower
+            WHERE       user.uid = ?
+            GROUP BY    user.uid';
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("s", $id);
     $stmt->execute();
@@ -148,9 +163,14 @@ $app->get('/user/{id}', function (Request $request, Response $response, $args) {
 $app->get('/userbyusername/{username}', function (Request $request, Response $response, $args) {
     $conn = $GLOBALS['conn'];
     $username = $args['username'];
-    $sql = 'SELECT  *
-            FROM    user
-            WHERE   username = ?';
+    $sql = 'SELECT  COUNT(DISTINCT f1.follower) as follower,COUNT(DISTINCT f2.uid) as following,user.*
+            FROM        user
+            LEFT JOIN   follow f1
+            ON          user.uid = f1.uid
+            LEFT JOIN   follow f2
+            ON          user.uid = f2.follower
+            WHERE       username = ?
+            GROUP BY    user.uid';
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("s", $username);
     $stmt->execute();
@@ -163,25 +183,45 @@ $app->get('/userbyusername/{username}', function (Request $request, Response $re
         ->withStatus(200);
 });
 
-$app->get('/follow', function (Request $request, Response $response, $args) {
+$app->put('/follow/{id}', function (Request $request, Response $response, $args) {
     $conn = $GLOBALS['conn'];
-    // $id = $args['id'];
-    $sql = 'SELECT      user.name,COUNT(*) as follower
-            FROM        follow
-            INNER JOIN  user
-            ON          user.uid = follow.uid
-            GROUP BY    follow.uid';
-    $stmt = $conn->prepare($sql);
-    // $stmt->bind_param("i", $id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $data = array();
-    foreach ($result as $row) {
-        array_push($data, $row);
-    }
+    $json = $request->getBody();
+    $jsonData = json_decode($json, true);
+    $id = $args['id'];
 
-    $response->getBody()->write(json_encode($data, JSON_UNESCAPED_UNICODE));
-    return $response
-        ->withHeader('Content-Type', 'application/json; charset=utf-8')
-        ->withStatus(200);
+    $sql = 'update user set password=? where uid = ?';
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param('i', $id);
+    $stmt->execute();
+    $affected = $stmt->affected_rows;
+    if ($affected > 0) {
+        $data = ["affected_rows" => $affected];
+        $response->getBody()->write(json_encode($data));
+        return $response
+            ->withHeader('Content-Type', 'application/json')
+            ->withStatus(200);
+    }
 });
+
+// $app->get('/follow', function (Request $request, Response $response, $args) {
+//     $conn = $GLOBALS['conn'];
+//     // $id = $args['id'];
+//     $sql = 'SELECT      user.name,COUNT(*) as follower
+//             FROM        follow
+//             INNER JOIN  user
+//             ON          user.uid = follow.uid
+//             GROUP BY    follow.uid';
+//     $stmt = $conn->prepare($sql);
+//     // $stmt->bind_param("i", $id);
+//     $stmt->execute();
+//     $result = $stmt->get_result();
+//     $data = array();
+//     foreach ($result as $row) {
+//         array_push($data, $row);
+//     }
+
+//     $response->getBody()->write(json_encode($data, JSON_UNESCAPED_UNICODE));
+//     return $response
+//         ->withHeader('Content-Type', 'application/json; charset=utf-8')
+//         ->withStatus(200);
+// });

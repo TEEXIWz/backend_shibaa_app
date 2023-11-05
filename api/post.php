@@ -133,7 +133,7 @@ $app->post('/post/edit/{id}', function (Request $request, Response $response, $a
         $response->getBody()->write(json_encode($data));
         return $response
             ->withHeader('Content-Type', 'application/json')
-            ->withStatus(200);
+            ->withStatus(201);
     }
 });
 
