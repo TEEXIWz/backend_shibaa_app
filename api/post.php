@@ -117,6 +117,7 @@ $app->post('/post', function (Request $request, Response $response, $args) {
             ->withStatus(201);
     }
 });
+
 //edit
 $app->post('/post/edit/{id}', function (Request $request, Response $response, $args) {
     $json = $request->getBody();

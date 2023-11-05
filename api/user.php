@@ -183,23 +183,67 @@ $app->get('/userbyusername/{username}', function (Request $request, Response $re
         ->withStatus(200);
 });
 
-$app->put('/follow/{id}', function (Request $request, Response $response, $args) {
-    $conn = $GLOBALS['conn'];
+$app->post('/follow/{id}', function (Request $request, Response $response, $args) {
     $json = $request->getBody();
-    $jsonData = json_decode($json, true);
     $id = $args['id'];
+    $jsonData = json_decode($json, true);
 
-    $sql = 'update user set password=? where uid = ?';
+    $conn = $GLOBALS['conn'];
+    $sql = 'INSERT INTO follow (uid,follower)
+            VALUES (?, ?)';
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param('i', $id);
+    $stmt->bind_param('ii', $id,$jsonData['uid']);
     $stmt->execute();
     $affected = $stmt->affected_rows;
     if ($affected > 0) {
-        $data = ["affected_rows" => $affected];
+        $data = ["affected_rows" => $affected, "last_fid" => $conn->insert_id];
         $response->getBody()->write(json_encode($data));
         return $response
             ->withHeader('Content-Type', 'application/json')
-            ->withStatus(200);
+            ->withStatus(201);
+    }
+});
+
+$app->post('/unfollow/{id}', function (Request $request, Response $response, $args) {
+    $json = $request->getBody();
+    $id = $args['id'];
+    $jsonData = json_decode($json, true);
+
+    $conn = $GLOBALS['conn'];
+    $sql = 'DELETE FROM follow WHERE uid = ? AND follower = ?';
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param('ii', $id,$jsonData['uid']);
+    $stmt->execute();
+    $affected = $stmt->affected_rows;
+    if ($affected > 0) {
+        $data = ["affected_rows" => $affected, "last_fid" => $conn->insert_id];
+        $response->getBody()->write(json_encode($data));
+        return $response
+            ->withHeader('Content-Type', 'application/json')
+            ->withStatus(201);
+    }
+});
+
+$app->post('/isfollow', function (Request $request, Response $response) {
+    $json = $request->getBody();
+    $jsonData = json_decode($json, true);
+
+    $conn = $GLOBALS['conn'];
+    $sql = 'SELECT  *
+            FROM    follow
+            where   uid = ?
+            AND     follower = ?';
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param('ii', $jsonData['uid'],$jsonData['follower']);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows == 0) {
+        $response->getBody()->write(json_encode("false", JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK));
+        return $response->withStatus(202);
+    } else {
+        $response->getBody()->write(json_encode("followed", JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK));
+        return $response->withStatus(200);
     }
 });
 
