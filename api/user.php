@@ -77,7 +77,7 @@ $app->put('/user/edit/{id}', function (Request $request, Response $response, $ar
     $stmt = $conn->prepare($sql);
     $stmt->bind_param('ssssi', $jsonData['name'], $jsonData['username'], $jsonData['description'], $jsonData['img'], $id);
     $stmt->execute();
-    
+
     $affected = $stmt->affected_rows;
     if ($affected > 0) {
         $data = ["affected_rows" => $affected];
@@ -111,12 +111,8 @@ $app->put('/user/editpwd/{id}', function (Request $request, Response $response, 
 //allUser
 $app->get('/user', function (Request $request, Response $response) {
     $conn = $GLOBALS['conn'];
-    $sql = 'SELECT  user.*,f.COUNT(user),f.COUNT(follower)
-            FROM    ((user
-            INNER JOIN  follow as f
-            ON          user.uid = follow.user)
-            INNER JOIN  follow as fs
-            ON          user.uid = follow.follower)';
+    $sql = 'SELECT  *
+            FROM    user';
     $stmt = $conn->prepare($sql);
     $stmt->execute();
     $result = $stmt->get_result();

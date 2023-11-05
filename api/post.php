@@ -52,7 +52,7 @@ $app->get('/posttag/{tid}', function (Request $request, Response $response, $arg
 });
 
 //searchByUserID
-$app->get('/post/{id}', function (Request $request, Response $response, $args) {
+$app->get('/postbyuser/{id}', function (Request $request, Response $response, $args) {
     $conn = $GLOBALS['conn'];
     $id = $args['id'];
     $sql = 'SELECT      id,user.uid,name,title,post.description,liked,created_at,post.img,user.img as uimg
@@ -71,6 +71,28 @@ $app->get('/post/{id}', function (Request $request, Response $response, $args) {
     }
 
     $response->getBody()->write(json_encode($data, JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK));
+    return $response
+        ->withHeader('Content-Type', 'application/json; charset=utf-8')
+        ->withStatus(200);
+});
+
+//searchByPostID
+$app->get('/post/{id}', function (Request $request, Response $response, $args) {
+    $conn = $GLOBALS['conn'];
+    $id = $args['id'];
+    $sql = 'SELECT      id,user.uid,name,title,post.description,liked,created_at,post.img,user.img as uimg
+            FROM        post
+            INNER JOIN  user
+            ON          post.uid = user.uid
+            WHERE       id = ?
+            ORDER BY    id desc';
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param('i', $id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+
+    $response->getBody()->write(json_encode($row, JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK));
     return $response
         ->withHeader('Content-Type', 'application/json; charset=utf-8')
         ->withStatus(200);
