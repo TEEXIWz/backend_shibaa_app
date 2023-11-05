@@ -117,6 +117,25 @@ $app->post('/post', function (Request $request, Response $response, $args) {
             ->withStatus(201);
     }
 });
+//edit
+$app->post('/post/edit/{id}', function (Request $request, Response $response, $args) {
+    $json = $request->getBody();
+    $jsonData = json_decode($json, true);
+    $id = $args['id'];
+    $conn = $GLOBALS['conn'];
+    $sql = 'UPDATE post set title=?, description=?, img=? where id = ?';
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param('sssi', $jsonData['title'], $jsonData['description'], $jsonData['img'], $id);
+    $stmt->execute();
+    $affected = $stmt->affected_rows;
+    if ($affected > 0) {
+        $data = ["affected_rows" => $affected];
+        $response->getBody()->write(json_encode($data));
+        return $response
+            ->withHeader('Content-Type', 'application/json')
+            ->withStatus(200);
+    }
+});
 
 //delete 
 $app->delete('/post/{id}', function (Request $request, Response $response, $args) {
